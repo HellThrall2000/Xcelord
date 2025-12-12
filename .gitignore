@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables (Keep API keys safe)
+.env
+
+# Logs
+*.log
+llm_traffic.log
+
+# Audio recordings (Generated at runtime)
+*.wav
+
+# Virtual Environments
+venv/
+.venv/

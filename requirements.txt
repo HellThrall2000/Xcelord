@@ -1,0 +1,8 @@
+sounddevice
+numpy
+scipy
+groq
+pandas
+openpyxl
+python-dotenv
+pyyaml
