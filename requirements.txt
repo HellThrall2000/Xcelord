@@ -6,3 +6,5 @@ pandas
 openpyxl
 python-dotenv
 pyyaml
+streamlit 
+streamlit-aggrid

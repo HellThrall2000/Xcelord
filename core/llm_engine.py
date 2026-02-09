@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Logging Setup ---
-# This sets up a file named 'llm_traffic.log' to store all requests
 logging.basicConfig(
     filename='llm_traffic.log',
     level=logging.INFO,
@@ -18,11 +17,11 @@ class LLMEngine:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY")
         self.client = Groq(api_key=self.api_key)
-        self.model = "openai/gpt-oss-20b" 
+        self.model = "openai/gpt-oss-20b" # Or "llama3-70b-8192"
 
     def generate_code(self, user_prompt, columns_context):
         """
-        Constructs the prompt, logs it, and gets code from Llama 3.
+        Constructs the prompt, logs it, and gets code from the LLM.
         """
         
         system_prompt = f"""
@@ -32,12 +31,13 @@ class LLMEngine:
         
         Your task: Write Python code to fulfill the User's request.
         
-        RULES:
-        1. Operate directly on `df`.
-        2. Do NOT create sample data. Use the existing `df` provided in the environment.
-        3. If the user asks for a calculation (like average, sum), print the result using print().
-        4. If the user asks to modify data (sort, filter, add column), update `df` inplace or reassign it (e.g., df = df.sort_values...).
-        5. Return ONLY the python code. Do not wrap it in markdown (```). Do not write explanations.
+        CRITICAL RULES:
+        1. Operate directly on `df`. Do NOT create sample data.
+        2. **DATE SAFETY**: The date columns might be loaded as strings. BEFORE using any `.dt` accessor (like .dt.year, .dt.month), YOU MUST write a line of code to convert the column to datetime. 
+           Example: `df['Date'] = pd.to_datetime(df['Date'], errors='coerce')`
+        3. If the user asks for a calculation, print the result.
+        4. If the user asks to modify data, update `df` inplace.
+        5. Return ONLY the python code. No markdown, no explanations.
         """
 
         messages_payload = [
@@ -46,8 +46,8 @@ class LLMEngine:
         ]
 
         # --- LOGGING REQUEST ---
-        log_message = f"\n{'='*20} NEW REQUEST {'='*20}\nUSER REQUEST: {user_prompt}\nSYSTEM PROMPT: {system_prompt}\n"
-        print(f"\n📢 [LOG] Sending Request to LLM... (See llm_traffic.log for full details)")
+        log_message = f"\n{'='*20} NEW REQUEST {'='*20}\nUSER REQUEST: {user_prompt}\n"
+        print(f"\n📢 [LOG] Sending Request to LLM...")
         logging.info(log_message)
 
         try:
@@ -60,11 +60,9 @@ class LLMEngine:
             response = chat_completion.choices[0].message.content
             
             # --- LOGGING RESPONSE ---
-            response_log = f"\n{'-'*20} RAW RESPONSE {'-'*20}\n{response}\n{'='*50}\n"
-            print(f"📥 [LOG] Received Response from LLM.")
-            # Print full response to console for debugging as requested
+            print(f"📥 [LOG] Received Response.")
             print(f"\n--- FULL LLM RESPONSE START ---\n{response}\n--- FULL LLM RESPONSE END ---\n")
-            logging.info(response_log)
+            logging.info(f"RESPONSE:\n{response}")
             
             # Cleanup
             clean_code = response.replace("```python", "").replace("```", "").strip()
@@ -73,5 +71,4 @@ class LLMEngine:
         except Exception as e:
             error_msg = f"API Error: {e}"
             print(f"❌ [LOG] {error_msg}")
-            logging.error(error_msg)
             return f"print('{error_msg}')"
