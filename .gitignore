@@ -2,8 +2,12 @@
 __pycache__/
 *.py[cod]
 
-# Environment variables (Keep API keys safe)
+# API keys: settings normally live in ~/.xcelord/ (outside the repo).
+# These guard against XCELORD_HOME pointing inside the project.
 .env
+.xcelord/
+config.json
+usage.json
 
 # Logs
 *.log
@@ -12,6 +16,13 @@ llm_traffic.log
 # Audio recordings (Generated at runtime)
 *.wav
 
-# Virtual Environments
+# Virtual environments and launcher-downloaded tools (uv + private Python)
 venv/
 .venv/
+.tools/
+
+# Packaging / tooling
+*.egg-info/
+build/
+dist/
+.pytest_cache/
